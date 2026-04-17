@@ -21,9 +21,9 @@ help:
 
 install-laravel:
 	mkdir -p src
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm app composer create-project --prefer-dist laravel/laravel tmp_laravel
-	mv src/tmp_laravel/* src/tmp_laravel/.* src/ 2>/dev/null || true
-	rm -rf src/tmp_laravel
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm app sh -c "composer create-project --prefer-dist laravel/laravel tmp_laravel && cp -a tmp_laravel/. . && rm -rf tmp_laravel"
+	sudo chown -R $$(id -u):$$(id -g) src/
+	sudo chmod -R a+rX src/
 	@echo "Laravel встановлено в src/. Для встановлення базового набору (Auth тощо) зайдіть в bash і запустіть відповідні команди."
 
 up-dev:
