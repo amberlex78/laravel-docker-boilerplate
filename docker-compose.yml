@@ -1,0 +1,49 @@
+name: laravel-starter
+
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    image: laravel-starter-app
+    container_name: ${APP_NAME:-laravel}_app
+    networks:
+      - app-network
+    depends_on:
+      - db
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-laravel}
+      - DB_USERNAME=${DB_USERNAME:-laravel}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: laravel-starter-web
+    container_name: ${APP_NAME:-laravel}_web
+    networks:
+      - app-network
+    depends_on:
+      - app
+
+  db:
+    build:
+      context: docker/mariadb
+      dockerfile: Dockerfile
+    image: laravel-starter-db
+    container_name: ${APP_NAME:-laravel}_db
+    networks:
+      - app-network
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE:-laravel}
+      - MYSQL_USER=${DB_USERNAME:-laravel}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-secret}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-root_secret}
