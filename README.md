@@ -8,8 +8,8 @@
 
 ### 1. Клонування репозиторію
 ```bash
-git clone <your-repo-url> my-new-project
-cd my-new-project
+git clone git@github.com:amberlex78/dockerized-laravel.git
+cd dockerized-laravel
 ```
 
 ### 2. Встановлення Laravel
