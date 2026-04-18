@@ -1,0 +1,21 @@
+{
+  "general": {
+    "defaultApprovalMode": "plan",
+    "enableNotifications": true,
+    "plan": {
+      "directory": "./docs/plans"
+    }
+  },
+  "ui": {
+    "inlineThinkingMode": "full",
+    "showStatusInTitle": true,
+    "hideTips": true,
+    "showMemoryUsage": true
+  },
+  "ide": {
+    "enabled": true
+  },
+  "experimental": {
+    "worktrees": true
+  }
+}
