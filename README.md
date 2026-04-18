@@ -62,11 +62,38 @@ DB_PASSWORD=secret
 
 ---
 
+## 🤖 Інтеграція AI (Laravel Boost & MCP)
+
+Laravel Boost — це MCP (Model Context Protocol) сервер, який дозволяє AI-агентам (Claude Code, Cursor, Windsurf тощо) краще розуміти ваш проект, переглядати маршрути, базу даних та виконувати Artisan команди.
+
+1. **Встановлення Boost:**
+   Виконайте команду для встановлення пакету та запуску інтерактивного інсталятора:
+   ```bash
+   make boost-install
+   ```
+
+2. **Підключення AI-агента:**
+   Оскільки Laravel працює в Docker, ваш AI-агент на хості має звертатися до нього через `docker exec`.
+   
+   **Команда для MCP клієнта:**
+   ```bash
+   docker exec -i ${APP_NAME:-laravel}_app php artisan boost:mcp
+   ```
+   *(Замініть `laravel_app` на назву вашого контейнера, якщо ви змінили `APP_NAME`).*
+
+   **Приклад для Claude Code:**
+   ```bash
+   claude mcp add laravel-boost --scope local -- docker exec -i ${APP_NAME:-laravel}_app php artisan boost:mcp
+   ```
+
+---
+
 ## 🛠 Довідник команд (Makefile)
 
 Замість того, щоб вводити довгі команди `docker compose`, використовуйте `make`:
 
 - `make install-laravel` - Встановити чистий Laravel у папку `src/` (та налаштувати права доступу).
+- `make boost-install` - Встановити та налаштувати Laravel Boost (AI інтеграція).
 - `make up-dev` - Запустити середовище розробки (всі контейнери).
 - `make stop` - Зупинити всі контейнери.
 - `make logs` - Переглянути логи в реальному часі.
