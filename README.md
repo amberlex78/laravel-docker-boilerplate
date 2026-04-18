@@ -62,6 +62,21 @@ DB_PASSWORD=secret
 
 ---
 
+## 🛠 Додаткові інструменти розробки
+
+### Laravel Debugbar
+Для зручного дебагу (перегляд запитів до БД, логів, рендерінгу) рекомендується встановити Laravel Debugbar:
+
+1. Встановлення:
+   ```bash
+   make bash
+   composer require barryvdh/laravel-debugbar --dev
+   exit
+   ```
+2. Панель автоматично з'явиться внизу сторінки в режимі `APP_DEBUG=true`.
+
+---
+
 ## 🤖 Інтеграція AI (Laravel Boost & MCP)
 
 Laravel Boost — це MCP (Model Context Protocol) сервер, який дозволяє AI-агентам (Claude Code, Cursor, Windsurf тощо) краще розуміти ваш проект, переглядати маршрути, базу даних та виконувати Artisan команди.
