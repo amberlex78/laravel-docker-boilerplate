@@ -1,4 +1,4 @@
-.PHONY: help install-laravel boost-install up-dev build-dev stop logs bash artisan db-shell
+.PHONY: help install-laravel boost-install debugbar-install up-dev build-dev stop logs bash artisan db-shell
 
 ifneq (,$(wildcard ./.env))
     include .env
@@ -7,9 +7,10 @@ endif
 
 help:
 	@echo "Available commands:"
-	@echo "  make install-laravel - Встановити новий Laravel проект (якщо src порожній)"
-	@echo "  make boost-install   - Встановити та налаштувати Laravel Boost (AI integration)"
-	@echo "  make up-dev          - Запустити середовище розробки"
+	@echo "  make install-laravel  - Встановити новий Laravel проект (якщо src порожній)"
+	@echo "  make boost-install    - Встановити та налаштувати Laravel Boost (AI integration)"
+	@echo "  make debugbar-install - Встановити Laravel Debugbar (Development tool)"
+	@echo "  make up-dev           - Запустити середовище розробки"
 	@echo "  make stop            - Зупинити всі контейнери"
 	@echo "  make build-dev       - Перезібрати образи для dev"
 	@echo "  make up-prod         - Запустити продакшен середовище"
@@ -40,6 +41,9 @@ install-laravel:
 
 boost-install:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app sh -c "composer require laravel/boost --dev && php artisan boost:install"
+
+debugbar-install:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app sh -c "composer require barryvdh/laravel-debugbar --dev"
 
 up-dev:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
