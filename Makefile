@@ -19,6 +19,7 @@ help:
 	@echo "  make node-bash       - Зайти в контейнер Node.js (для фронтенду)"
 	@echo "  make npm cmd=...     - Запустити команду npm (напр. make npm cmd=install)"
 	@echo "  make artisan cmd=... - Запустити команду artisan (напр. make artisan cmd=migrate)"
+	@echo "  make db-fresh        - Повне перестворення бази даних (migrate:fresh)"
 	@echo "  make db-shell        - Зайти в контейнер бази даних"
 
 install-laravel:
@@ -75,6 +76,9 @@ npm:
 
 artisan:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app php artisan $(cmd)
+
+db-fresh:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app php artisan migrate:fresh
 
 db-shell:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec db mariadb -u$${DB_USERNAME:-laravel} -p$${DB_PASSWORD:-secret} $${DB_DATABASE:-laravel}
