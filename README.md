@@ -36,7 +36,6 @@ DB_USERNAME=laravel
 DB_PASSWORD=secret
 ```
 
----
 
 ### 5. Adminer (Керування БД)
 Для зручного керування базою даних у середовищі розробки доступний Adminer:
