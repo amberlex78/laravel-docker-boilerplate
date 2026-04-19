@@ -21,6 +21,7 @@ help:
 	@echo "  make artisan cmd=... - Запустити команду artisan (напр. make artisan cmd=migrate)"
 	@echo "  make db-fresh        - Повне перестворення бази даних (migrate:fresh)"
 	@echo "  make db-shell        - Зайти в контейнер бази даних"
+	@echo "  make fix-permissions - Виправити права доступу до файлів у src/"
 
 install-laravel:
 	mkdir -p src
@@ -82,3 +83,7 @@ db-fresh:
 
 db-shell:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec db mariadb -u$${DB_USERNAME:-laravel} -p$${DB_PASSWORD:-secret} $${DB_DATABASE:-laravel}
+
+fix-permissions:
+	sudo chown -R $$(id -u):$$(id -g) src/
+	sudo chmod -R a+rX src/
