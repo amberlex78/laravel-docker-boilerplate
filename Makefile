@@ -34,9 +34,10 @@ install-laravel:
 	@echo ""
 	@echo "💡 Наступні кроки:"
 	@echo "   1. Запустіть контейнери: make up-dev"
-	@echo "   2. Для встановлення авторизації (Starter Kits):"
+	@echo "   2. Для встановлення авторизації (Laravel Fortify):"
 	@echo "      make bash"
-	@echo "      composer require laravel/breeze --dev && php artisan breeze:install"
+	@echo "      composer require laravel/fortify && php artisan fortify:install"
+	@echo "      php artisan migrate"
 	@echo "======================================================================"
 
 boost-install:

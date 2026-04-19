@@ -38,27 +38,23 @@ DB_PASSWORD=secret
 
 ---
 
-## 🔐 Встановлення Авторизації (Laravel Breeze / Starter Kits)
+## 🔐 Встановлення Авторизації (Laravel Fortify)
 
-Щоб отримати готову систему реєстрації та логіну з коробки:
+Для налаштування бекенд-авторизації (логін, реєстрація, скидання пароля тощо):
 
 1. Зайдіть у контейнер PHP:
+
    ```bash
    make bash
    ```
-2. Встановіть Breeze та запустіть міграції (оберіть бажаний стек при встановленні, наприклад Blade або React):
+2. Встановіть Fortify та запустіть міграції:
+
    ```bash
-   composer require laravel/breeze --dev
-   php artisan breeze:install
+   composer require laravel/fortify
+   php artisan fortify:install
    php artisan migrate
    exit
    ```
-3. Зберіть фронтенд асети за допомогою Node.js контейнера:
-   ```bash
-   make npm cmd="install"
-   make npm cmd="run dev"
-   ```
-   *(Vite сервер буде автоматично доступний на порту `5173` з підтримкою Hot Module Replacement).*
 
 ---
 
@@ -68,6 +64,7 @@ DB_PASSWORD=secret
 Для зручного дебагу (перегляд запитів до БД, логів, рендерінгу) рекомендується встановити Laravel Debugbar:
 
 1. Встановлення:
+
    ```bash
    make debugbar-install
    ```
@@ -80,12 +77,14 @@ DB_PASSWORD=secret
 Laravel Boost — це MCP (Model Context Protocol) сервер, який дозволяє AI-агентам (Claude Code, Cursor, Windsurf тощо) краще розуміти ваш проект, переглядати маршрути, базу даних та виконувати Artisan команди.
 
 1. **Встановлення Boost:**
+
    Виконайте команду для встановлення пакету та запуску інтерактивного інсталятора:
    ```bash
    make boost-install
    ```
 
 2. **Підключення AI-агента:**
+
    Оскільки Laravel працює в Docker, ваш AI-агент на хості має звертатися до нього через `docker exec`.
    
    **Команда для MCP клієнта:**
