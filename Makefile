@@ -1,4 +1,7 @@
 # —————————————————————————————————————————————————————————————— Variables
+CURRENT_UID = $(shell id -u)
+CURRENT_GID = $(shell id -g)
+
 # APP_NAME береться з .env або за замовчуванням 'laravel'
 APP_NAME = $(shell grep APP_NAME .env | cut -d '=' -f2 || echo laravel)
 
@@ -28,28 +31,20 @@ help: ## Показати цю довідку
 
 
 ## ————————————————————————————— Install
-init: ## Перший запуск: створення .env та збірка
-	@if [ ! -f .env ]; then \
-		echo "USER_ID=$$(id -u)\nGROUP_ID=$$(id -g)\nAPP_NAME=laravel" > .env; \
-	fi
-	@$(MAKE) install
-
-install: ## Збірка та запуск контейнерів
+install: ## Збірка та запуск порожніх контейнерів
 	@$(DOCKER_DEV) down --remove-orphans
 	@$(DOCKER_DEV) build --pull
 	@$(DOCKER_DEV) up --detach
-	@echo "\033[33mКонтейнери готові. Тепер запускай: make create-project\033[0m"
+	@echo "\033[33mКонтейнери готові.\033[0m"
 
-create-project: ## Створення проекту Laravel + налаштування
-	@$(PHP_RUN) sh -c "laravel new tmp_project && cp -a tmp_project/. . && rm -rf tmp_project"
-	@$(MAKE) artisan c="wayfinder:generate --with-form"
-	@$(MAKE) npm-install
-	@echo "\033[32mПроект створено! Запускай 'make dev' для старту.\033[0m"
+create-project: ## Створення проекту Laravel (Starter Kit, Pest/PHPUnit тощо)
+	@$(DOCKER_DEV) run --rm -it app sh -c "\
+		laravel new tmp_project && \
+		cp -a tmp_project/. . && \
+		rm -rf tmp_project && \
+		chown -R $(CURRENT_UID):$(CURRENT_GID) ."
+	@echo "\033[32mПроект успішно створено у папці src/\033[0m"
 
-dev: ## Запустити все для розробки (App + Vite)
-	@$(DOCKER_DEV) up -d
-	@$(DOCKER_DEV) up -d node
-	@echo "\033[32mПроект доступний на: http://localhost:8000\033[0m"
 
 ## ————————————————————————————— Docker
 build: ## Зібрати образи
@@ -93,17 +88,13 @@ NODE_RUN = $(DOCKER_DEV) run --rm -u $(shell id -u):$(shell id -g) node
 
 ##—————————————————————————————— Frontend (NPM)
 npm-install: ## Встановити JS-залежності
-	@$(NODE_RUN) npm install
+	@$(NODE_RUN) npm install --ignore-scripts
 
 npm-build: ## Зібрати фронтенд для продакшну
 	@$(NODE_RUN) npm run build
 
 npm-dev: ## Запустити Vite у режимі розробки (Watch mode)
 	@$(DOCKER_DEV) up -d node
-	@echo "\033[32mVite (node) запущено у фоні. Перевір статус: make stats\033[0m"
 
 npm-stop: ## Зупинити сервіс Node (Vite)
 	@$(DOCKER_DEV) stop node
-
-npm-shell: ## Зайти в консоль Node контейнера
-	@$(DOCKER_DEV) run --rm -it -u $(shell id -u):$(shell id -g) node sh
