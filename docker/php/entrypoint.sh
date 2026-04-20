@@ -7,6 +7,20 @@ if [ -f "composer.json" ] && [ ! -d "vendor" ]; then
     composer install --prefer-dist
 fi
 
+# Create .env if it doesn't exist
+if [ ! -f ".env" ] && [ -f ".env.example" ]; then
+    echo "Creating .env from .env.example..."
+    cp .env.example .env
+fi
+
+# Generate key if it's missing in .env
+if [ -f ".env" ] && [ -f "artisan" ]; then
+    if ! grep -q "APP_KEY=base64:" .env || [ -z "$(grep "APP_KEY=base64:" .env | cut -d '=' -f2)" ]; then
+        echo "Generating application key..."
+        php artisan key:generate --force
+    fi
+fi
+
 # Run migrations if .env exists
 if [ -f ".env" ] && [ "$APP_ENV" != "production" ]; then
     echo "Running migrations..."
