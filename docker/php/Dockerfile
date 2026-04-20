@@ -33,6 +33,12 @@ RUN apk add --no-cache pcre-dev ${PHPIZE_DEPS} \
     && docker-php-ext-enable xdebug \
     && apk del pcre-dev ${PHPIZE_DEPS}
 
+    # Встановлюємо інсталер Laravel прямо в образ
+RUN composer global require laravel/installer
+
+# Обов'язково додаємо шлях до бінарників у PATH
+ENV PATH="/root/.composer/vendor/bin:${PATH}"
+
 COPY docker/php/conf.d/dev.ini /usr/local/etc/php/conf.d/dev.ini
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

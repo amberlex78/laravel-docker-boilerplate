@@ -1,89 +1,69 @@
-.PHONY: help install-laravel boost-install debugbar-install up-dev build-dev stop logs bash artisan db-shell
+# —————————————————————————————————————————————————————————————— Variables
+# APP_NAME береться з .env або за замовчуванням 'laravel'
+APP_NAME = $(shell grep APP_NAME .env | cut -d '=' -f2 || echo laravel)
 
-ifneq (,$(wildcard ./.env))
-    include .env
-    export
-endif
+DOCKER_COMP = docker compose
 
-help:
-	@echo "Available commands:"
-	@echo "  make install-laravel  - Встановити новий Laravel проект (якщо src порожній)"
-	@echo "  make boost-install    - Встановити та налаштувати Laravel Boost (AI integration)"
-	@echo "  make debugbar-install - Встановити Laravel Debugbar (Development tool)"
-	@echo "  make up-dev           - Запустити середовище розробки"
-	@echo "  make stop            - Зупинити всі контейнери"
-	@echo "  make build-dev       - Перезібрати образи для dev"
-	@echo "  make up-prod         - Запустити продакшен середовище"
-	@echo "  make build-prod      - Перезібрати образи для prod"
-	@echo "  make bash            - Зайти в контейнер PHP"
-	@echo "  make node-bash       - Зайти в контейнер Node.js (для фронтенду)"
-	@echo "  make npm cmd=...     - Запустити команду npm (напр. make npm cmd=install)"
-	@echo "  make artisan cmd=... - Запустити команду artisan (напр. make artisan cmd=migrate)"
-	@echo "  make db-fresh        - Повне перестворення бази даних (migrate:fresh)"
-	@echo "  make db-shell        - Зайти в контейнер бази даних"
-	@echo "  make fix-permissions - Виправити права доступу до файлів у src/"
+# Використовуємо два файли для розробки
+DOCKER_DEV  = $(DOCKER_COMP) -f docker-compose.yml -f docker-compose.dev.yml
 
-install-laravel:
-	mkdir -p src
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm app sh -c "composer create-project --prefer-dist laravel/laravel tmp_laravel && cp -a tmp_laravel/. . && rm -rf tmp_laravel"
-	sudo chown -R $$(id -u):$$(id -g) src/
-	sudo chmod -R a+rX src/
-	@echo ""
-	@echo "======================================================================"
-	@echo "🚀 Laravel успішно встановлено в директорію src/!"
-	@echo "======================================================================"
-	@echo "🌐 Адреса проекту: http://localhost:8000"
-	@echo ""
-	@echo "💡 Наступні кроки:"
-	@echo "   1. Запустіть контейнери: make up-dev"
-	@echo "   2. Для встановлення авторизації (Laravel Fortify):"
-	@echo "      make bash"
-	@echo "      composer require laravel/fortify && php artisan fortify:install"
-	@echo "      php artisan migrate"
-	@echo "======================================================================"
+# Контейнери
+# -it обов'язковий для інтерактивних запитань інсталятора
+PHP_RUN     = $(DOCKER_DEV) run --rm -it app
+PHP_EXEC    = $(DOCKER_DEV) exec app
 
-boost-install:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app sh -c "composer require laravel/boost --dev && php artisan boost:install"
+# Бінарні файли всередині контейнера
+COMPOSER    = $(PHP_EXEC) composer
+ARTISAN     = $(PHP_EXEC) php artisan
 
-debugbar-install:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app sh -c "composer require barryvdh/laravel-debugbar --dev"
 
-up-dev:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# —————————————————————————————————————————————————————————————— Settings
+.DEFAULT_GOAL = help
+.PHONY: help build install create-project up down restart shell logs
 
-build-dev:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml build
 
-up-prod:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+## ————————————————————————————————————————————————————————————————————— Targets
+help: ## Показати цю довідку
+	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
 
-build-prod:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml build
 
-stop:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.prod.yml down
+## ————————————————————————————————————————————————————————————————————— Install
+install: ## Початкова підготовка: збірка та запуск порожніх контейнерів
+	@$(DOCKER_DEV) down --remove-orphans
+	@$(DOCKER_DEV) build --pull
+	@$(DOCKER_DEV) up --detach
+	@echo "\033[33mКонтейнери готові. Тепер запускай: make create-project\033[0m"
 
-logs:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f
+create-project: ## Створення проекту Laravel (Starter Kit, Pest/PHPUnit тощо)
+	@$(PHP_RUN) sh -c "\
+		laravel new tmp_project && \
+		cp -a tmp_project/. . && \
+		rm -rf tmp_project && \
+		chown -R $$(id -u):$$(id -g) ."
+	@echo "\033[32mПроект успішно створено у папці src/\033[0m"
 
-bash:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app /bin/bash
 
-node-bash:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec node /bin/sh
+## ————————————————————————————————————————————————————————————————————— Docker
+build: ## Зібрати образи (особливо після змін у Dockerfile)
+	@$(DOCKER_DEV) build
 
-npm:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec node npm $(cmd)
+up: ## Підняти проект
+	@$(DOCKER_DEV) up --detach
 
-artisan:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app php artisan $(cmd)
+down: ## Зупинити та видалити контейнери
+	@$(DOCKER_DEV) down --remove-orphans
 
-db-fresh:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app php artisan migrate:fresh
+restart: down up ## Перезапуск
 
-db-shell:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec db mariadb -u$${DB_USERNAME:-laravel} -p$${DB_PASSWORD:-secret} $${DB_DATABASE:-laravel}
+shell: ## Зайти в консоль PHP контейнера
+	@$(PHP_EXEC) bash
 
-fix-permissions:
-	sudo chown -R $$(id -u):$$(id -g) src/
-	sudo chmod -R a+rX src/
+
+## ————————————————————————————————————————————————————————————————————— Binaries
+artisan: ## Приклад: make artisan c='migrate'
+	@$(ARTISAN) $(c)
+
+composer: ## Приклад: make composer c='require fruitcake/laravel-debugbar --dev'
+	@$(COMPOSER) $(c)
+
+## —————————————————————————————————————————————————————————————————————
