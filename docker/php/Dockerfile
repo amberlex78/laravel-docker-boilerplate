@@ -25,6 +25,9 @@ WORKDIR /var/www/html
 # Copy base php config
 COPY docker/php/conf.d/base.ini /usr/local/etc/php/conf.d/base.ini
 
+
+
+##################################################################
 # Dev Stage
 FROM base AS dev
 # Install Xdebug
@@ -33,8 +36,11 @@ RUN apk add --no-cache pcre-dev ${PHPIZE_DEPS} \
     && docker-php-ext-enable xdebug \
     && apk del pcre-dev ${PHPIZE_DEPS}
 
-    # Встановлюємо інсталер Laravel прямо в образ
+# Встановлюємо інсталер Laravel прямо в образ
 RUN composer global require laravel/installer
+
+# Встановлюємо NodeJS с NPM
+# RUN apk add --no-cache nodejs npm
 
 # Обов'язково додаємо шлях до бінарників у PATH
 ENV PATH="/root/.composer/vendor/bin:${PATH}"
@@ -46,6 +52,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["php-fpm"]
 
+
+
+##################################################################
 # Build Stage (used for prod)
 FROM base AS build
 COPY src/composer.json src/composer.lock* ./
@@ -56,6 +65,9 @@ COPY src/ .
 # Dump autoload and run scripts
 RUN if [ -f composer.json ]; then composer dump-autoload --optimize && composer run-script post-root-package-install || true && composer run-script post-create-project-cmd || true; fi
 
+
+
+##################################################################
 # Prod Stage
 FROM base AS prod
 COPY docker/php/conf.d/prod.ini /usr/local/etc/php/conf.d/prod.ini

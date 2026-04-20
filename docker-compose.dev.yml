@@ -28,6 +28,8 @@ services:
   node:
     image: node:24-alpine
     container_name: ${APP_NAME:-laravel}_node
+    networks:
+      - app-network
     working_dir: /var/www/html
     volumes:
       - ./src:/var/www/html
