@@ -2,6 +2,8 @@ services:
   app:
     build:
       target: dev
+    ports:
+      - "5173:5173" # Порт для Vite HMR
     volumes:
       - ./src:/var/www/html
     environment:
@@ -24,31 +26,6 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
-
-  node:
-    image: node:24-alpine
-    container_name: ${APP_NAME:-laravel}_node
-    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
-    networks:
-      - app-network
-    working_dir: /var/www/html
-    volumes:
-      - ./src:/var/www/html
-    ports:
-      - "5173:5173" # Порт для Vite HMR (Hot Module Replacement)
-    tty: true
-    command: >
-      sh -c "
-      echo '#!/bin/sh' > /tmp/php && echo 'exit 0' >> /tmp/php && chmod +x /tmp/php;
-      export PATH=\"/tmp:\$$PATH\";
-      if [ -f package.json ]; then
-        if [ ! -d node_modules ]; then npm install; fi;
-        npm run dev -- --host 0.0.0.0;
-      else
-        echo 'Node service is waiting...';
-        tail -f /dev/null;
-      fi
-      "
 
   adminer:
     image: adminer:latest
