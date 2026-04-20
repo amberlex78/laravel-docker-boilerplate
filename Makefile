@@ -9,8 +9,8 @@ DOCKER_DEV  = $(DOCKER_COMP) -f docker-compose.yml -f docker-compose.dev.yml
 
 # Контейнери
 # -it обов'язковий для інтерактивних запитань інсталятора
-PHP_RUN     = $(DOCKER_DEV) run --rm -it app
-PHP_EXEC    = $(DOCKER_DEV) exec app
+PHP_RUN     = $(DOCKER_DEV) run --rm -it -u www-data app
+PHP_EXEC    = $(DOCKER_DEV) exec -u www-data app
 
 # Бінарні файли всередині контейнера
 COMPOSER    = $(PHP_EXEC) composer
@@ -38,13 +38,12 @@ create-project: ## Створення проекту Laravel (Starter Kit, Pest/
 	@$(PHP_RUN) sh -c "\
 		laravel new tmp_project && \
 		cp -a tmp_project/. . && \
-		rm -rf tmp_project && \
-		chown -R $$(id -u):$$(id -g) ."
+		rm -rf tmp_project"
 	@echo "\033[32mПроект успішно створено у папці src/\033[0m"
 
 
 ## ————————————————————————————— Docker
-build: ## Зібрати образи (особливо після змін у Dockerfile)
+build: ## Зібрати образи
 	@$(DOCKER_DEV) build
 
 up: ## Підняти проект
@@ -68,19 +67,6 @@ composer: ## Приклад: make composer c='require fruitcake/laravel-debugbar
 
 ## —————————————————————————————
 
-# Виправляємо права без 777
-fix-permissions:
-	# 1. Робимо тебе власником файлів на хості
-	sudo chown -R $$(id -u):$$(id -g) src/
-	# 2. Даємо групі право на запис
-	sudo chmod -R 775 src/storage src/bootstrap/cache
-	# 3. Встановлюємо SETGID біт (пункт 3 з твого скрина)
-	# Це змусить нові файли автоматично успадковувати групу
-	sudo chmod -R g+s src/storage src/bootstrap/cache
-	# 4. (Хак для Docker) Даємо доступ користувачу www-data всередині Alpine (UID 82)
-	# Якщо PHP в Alpine, то www-data — це зазвичай 82
-	sudo chown -R 82:82 src/storage src/bootstrap/cache
-
 stats: ## Показати список образів, мереж та сховищ (volumes)
 	@echo "\033[33m>>> Docker Images <<<\033[0m"
 	@docker image ls
@@ -93,22 +79,17 @@ stats: ## Показати список образів, мереж та схов
 
 
 # Використовуємо сервіс node з нашого docker-compose
-NODE_RUN = $(DOCKER_DEV) run --rm node
+NODE_RUN = $(DOCKER_DEV) run --rm -u node node
 
 ##—————————————————————————————— Frontend (NPM)
 npm-install: ## Встановити JS-залежності (безпечно)
 	@$(NODE_RUN) npm install --ignore-scripts
-	@$(MAKE) fix-owner
 
 npm-build: ## Зібрати фронтенд для продакшну
 	@$(NODE_RUN) npm run build
-	@$(MAKE) fix-owner
 
 npm-dev: ## Запустити Vite у режимі розробки (Watch mode)
 	@$(DOCKER_DEV) up -d node
 
 npm-stop: ## Зупинити сервіс Node (Vite)
 	@$(DOCKER_DEV) stop node
-
-fix-owner: ## Виправити власника файлів (щоб не були root)
-	@sudo chown -R $$(id -u):$$(id -g) src/node_modules src/package-lock.json || true

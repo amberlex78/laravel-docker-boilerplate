@@ -1,6 +1,13 @@
 # Base Stage
 FROM php:8.5-fpm-alpine AS base
 
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+RUN apk add --no-cache shadow && \
+    usermod -u ${USER_ID} www-data && \
+    groupmod -g ${GROUP_ID} www-data
+
 # Install system dependencies
 RUN apk add --no-cache \
     git \
