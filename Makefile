@@ -79,17 +79,22 @@ stats: ## Показати список образів, мереж та схов
 
 
 # Використовуємо сервіс node з нашого docker-compose
-NODE_RUN = $(DOCKER_DEV) run --rm -u node node
+# Використовуємо UID/GID хоста для Node, щоб node_modules належали вам
+NODE_RUN = $(DOCKER_DEV) run --rm -u $(shell id -u):$(shell id -g) node
 
 ##—————————————————————————————— Frontend (NPM)
-npm-install: ## Встановити JS-залежності (безпечно)
-	@$(NODE_RUN) npm install --ignore-scripts
+npm-install: ## Встановити JS-залежності
+	@$(NODE_RUN) npm install
 
 npm-build: ## Зібрати фронтенд для продакшну
 	@$(NODE_RUN) npm run build
 
 npm-dev: ## Запустити Vite у режимі розробки (Watch mode)
 	@$(DOCKER_DEV) up -d node
+	@echo "\033[32mVite (node) запущено у фоні. Перевір статус: make stats\033[0m"
 
 npm-stop: ## Зупинити сервіс Node (Vite)
 	@$(DOCKER_DEV) stop node
+
+npm-shell: ## Зайти в консоль Node контейнера
+	@$(DOCKER_DEV) run --rm -it -u $(shell id -u):$(shell id -g) node sh

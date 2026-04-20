@@ -10,8 +10,8 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
       args:
-        USER_ID: ${UID:-1000}
-        GROUP_ID: ${GID:-1000}
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
     image: laravel-starter-app
     container_name: ${APP_NAME:-laravel}_app
     networks:
