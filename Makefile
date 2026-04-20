@@ -1,23 +1,10 @@
-# —————————————————————————————————————————————————————————————— Variables
 CURRENT_UID = $(shell id -u)
 CURRENT_GID = $(shell id -g)
 
-# APP_NAME береться з .env або за замовчуванням 'laravel'
-APP_NAME = $(shell grep APP_NAME .env | cut -d '=' -f2 || echo laravel)
+DOCKER_DEV  = docker compose -f docker-compose.yml -f docker-compose.dev.yml
 
-DOCKER_COMP = docker compose
-
-# Використовуємо два файли для розробки
-DOCKER_DEV  = $(DOCKER_COMP) -f docker-compose.yml -f docker-compose.dev.yml
-
-# Контейнери
-# -it обов'язковий для інтерактивних запитань інсталятора
 PHP_RUN     = $(DOCKER_DEV) run --rm -it -u www-data app
 PHP_EXEC    = $(DOCKER_DEV) exec -u www-data app
-
-# Бінарні файли всередині контейнера
-COMPOSER    = $(PHP_EXEC) composer
-ARTISAN     = $(PHP_EXEC) php artisan
 
 
 # ————————————————————————————— Settings
@@ -31,13 +18,13 @@ help: ## Показати цю довідку
 
 
 ## ————————————————————————————— Install
-install: ## Збірка та запуск порожніх контейнерів
+install: ## Збірка та запуск контейнерів
 	@$(DOCKER_DEV) down --remove-orphans
 	@$(DOCKER_DEV) build --pull
 	@$(DOCKER_DEV) up --detach
 	@echo "\033[33mКонтейнери готові.\033[0m"
 
-create-project: ## Створення проекту Laravel (Starter Kit, Pest/PHPUnit тощо)
+create-project: ## Створення проекту Laravel
 	@$(DOCKER_DEV) run --rm -it app sh -c "\
 		laravel new tmp_project && \
 		cp -a tmp_project/. . && \
@@ -64,37 +51,18 @@ shell: ## Зайти в консоль PHP контейнера
 
 ## ————————————————————————————— Binaries
 artisan: ## Приклад: make artisan c='migrate'
-	@$(ARTISAN) $(c)
+	@$(PHP_EXEC) php artisan $(c)
 
 composer: ## Приклад: make composer c='require fruitcake/laravel-debugbar --dev'
-	@$(COMPOSER) $(c)
+	@$(PHP_EXEC) composer $(c)
 
-## —————————————————————————————
-
-stats: ## Показати список образів, мереж та сховищ (volumes)
-	@echo "\033[33m>>> Docker Images <<<\033[0m"
-	@docker image ls
-	@echo "\n\033[33m>>> Docker Containers Running <<<\033[0m"
-	@docker ps
-	@echo "\n\033[33m>>> Docker Networks <<<\033[0m"
-	@docker network ls
-	@echo "\n\033[33m>>> Docker Volumes <<<\033[0m"
-	@docker volume ls
-
-
-# Використовуємо сервіс node з нашого docker-compose
-# Використовуємо UID/GID хоста для Node, щоб node_modules належали вам
-NODE_RUN = $(DOCKER_DEV) run --rm -u $(shell id -u):$(shell id -g) node
 
 ##—————————————————————————————— Frontend (NPM)
 npm-install: ## Встановити JS-залежності
-	@$(NODE_RUN) npm install --ignore-scripts
+	@$(PHP_EXEC) npm install
 
 npm-build: ## Зібрати фронтенд для продакшну
-	@$(NODE_RUN) npm run build
+	@$(PHP_EXEC) npm run build
 
-npm-dev: ## Запустити Vite у режимі розробки (Watch mode)
-	@$(DOCKER_DEV) up -d node
-
-npm-stop: ## Зупинити сервіс Node (Vite)
-	@$(DOCKER_DEV) stop node
+npm-shell: ## Зайти в консоль з Node
+	@$(PHP_EXEC) bash
