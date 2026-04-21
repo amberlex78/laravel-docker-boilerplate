@@ -9,7 +9,9 @@ PHP_EXEC    = $(DOCKER_DEV) exec -u www-data app
 
 # ————————————————————————————— Settings
 .DEFAULT_GOAL = help
-.PHONY: help build install create-project up down restart shell logs
+.PHONY: help init create-project build up down restart shell logs db-shell \
+        artisan key-generate cache-clear migrate-fresh migrate db-seed composer \
+        npm-install npm-build npm-shell fix-permissions
 
 
 ## ————————————————————————————— Targets
@@ -18,11 +20,16 @@ help: ## Показати цю довідку
 
 
 ## ————————————————————————————— Install
-install: ## Збірка та запуск контейнерів
+init: ## Збірка та запуск контейнерів
 	@$(DOCKER_DEV) down --remove-orphans
 	@$(DOCKER_DEV) build --pull
 	@$(DOCKER_DEV) up --detach
+	@$(MAKE) --no-print-directory fix-permissions
 	@echo "\033[33mКонтейнери готові.\033[0m"
+
+fix-permissions: ## Виправити права на логи та сховище (sudo)
+	@sudo chown -R $$(id -u):$$(id -g) docker/nginx/logs
+	@sudo chown -R $$(id -u):$$(id -g) src/storage src/bootstrap/cache
 
 create-project: ## Створення проекту Laravel
 	@$(DOCKER_DEV) run --rm -it app sh -c "\
@@ -30,7 +37,6 @@ create-project: ## Створення проекту Laravel
 		cp -a tmp_project/. . && \
 		rm -rf tmp_project && \
 		chown -R $$(id -u):$$(id -g) ."
-	@echo "\033[32mПроект успішно створено у папці src/\033[0m"
 
 
 ## ————————————————————————————— Docker
@@ -53,23 +59,23 @@ shell: ## Зайти в консоль PHP контейнера
 artisan: ## Приклад: make artisan c='migrate'
 	@$(PHP_EXEC) php artisan $(c)
 
+key-generate: ## Згенерувати APP_KEY
+	@$(PHP_EXEC) php artisan key:generate
+
 cache-clear: ## Очистити всі кеші Laravel
 	@$(PHP_EXEC) php artisan optimize:clear
 
-migrate: ## Запустити міграції бази даних
-	@$(PHP_EXEC) php artisan migrate
-
 migrate-fresh: ## Drop all tables and re-run all migrations
 	@$(PHP_EXEC) php artisan migrate:fresh
+
+migrate: ## Запустити міграції бази даних
+	@$(PHP_EXEC) php artisan migrate
 
 db-seed: ## Run all database seeders
 	@$(PHP_EXEC) php artisan db:seed
 
 db-shell: ## Зайти в консоль бази даних
 	@$(DOCKER_DEV) exec db mariadb -u $${DB_USERNAME:-laravel} -p$${DB_PASSWORD:-secret} $${DB_DATABASE:-laravel}
-
-key-generate: ## Згенерувати APP_KEY
-	@$(PHP_EXEC) php artisan key:generate
 
 composer: ## Приклад: make composer c='require fruitcake/laravel-debugbar --dev'
 	@$(PHP_EXEC) composer $(c)
