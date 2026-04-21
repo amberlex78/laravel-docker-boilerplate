@@ -17,7 +17,29 @@ make create-project
 ```
 *Під час встановлення на питання про запуск `npm install` та `npm run build` можна відповідати **no**, оскільки для цього є окремі команди у `Makefile`.*
 
-### 3. Запуск для розробки
+### 3. База даних
+У `src/.env` пропишіть параметри бази даних:
+```bash
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=laravel
+DB_PASSWORD=secret
+```
+Після цього перезапустіть контейнери:
+```bash
+make restart
+```
+
+Запустіть міграції та seeders:
+```bash
+make migrate
+make db-seed
+```
+
+
+### 4. Запуск для розробки
 Якщо ви зупиняли контейнери, для подальшої роботи використовуйте команду:
 ```bash
 make up
@@ -29,21 +51,18 @@ make up
 
 ## Основні команди Makefile
 
-- `make install` — Повна збірка та запуск (виконувати при першому запуску або зміні Dockerfile).
+- `make init` — Повна збірка та запуск (виконувати при першому запуску).
+- `make create-project` — Створення нового проекту Laravel (інтерактивно).
+- `make fix-permissions` — Виправити права доступу на логи та кеш (якщо вони стали root).
 - `make up` — Підняти контейнери проекту у фоновому режимі.
 - `make down` — Зупинити та видалити контейнери.
 - `make restart` — Перезапустити контейнери.
 - `make shell` — Зайти в консоль PHP-контейнера.
-- `make artisan c="command"` — Виконати довільну команду Artisan (напр. `make artisan c="make:controller"`).
-- `make cache-clear` — Очистити всі кеші Laravel (`optimize:clear`).
+- `make artisan c="command"` — Виконати команду Artisan (напр. `make artisan c="make:model Post"`).
 - `make migrate` — Запустити міграції бази даних.
-- `make key-generate` — Згенерувати APP_KEY.
+- `make migrate-fresh` — Перестворити базу даних (drop all tables & migrate).
+- `make db-seed` — Запустити Database Seeders.
+- `make db-shell` — Зайти в консоль MariaDB (SQL-клієнт).
 - `make composer c="require package"` — Встановити PHP-пакет.
 - `make npm-install` — Встановити JS-залежності.
 - `make npm-build` — Зібрати фронтенд.
-
-## Особливості
-- **Синхронізація прав**: Файли в папці `src/` автоматично отримують ваші UID/GID, щоб уникнути проблем із правами root.
-- **Vite HMR**: Hot Module Replacement працює "з коробки" через Docker.
-- **Оптимізований PHP 8.5**: Налаштовані правильні ліміти пам'яті та увімкнений OPcache JIT для продакшну.
-- **Multi-stage Build**: Dockerfile розділений та оптимізований для Dev (з Xdebug) та Prod версій.
