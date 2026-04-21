@@ -1,5 +1,5 @@
-CURRENT_UID = $(shell id -u)
-CURRENT_GID = $(shell id -g)
+export USER_ID := $(shell id -u)
+export GROUP_ID := $(shell id -g)
 
 DOCKER_DEV  = docker compose -f docker-compose.yml -f docker-compose.dev.yml
 
@@ -29,7 +29,7 @@ create-project: ## Створення проекту Laravel
 		laravel new tmp_project && \
 		cp -a tmp_project/. . && \
 		rm -rf tmp_project && \
-		chown -R $(CURRENT_UID):$(CURRENT_GID) ."
+		chown -R $$(id -u):$$(id -g) ."
 	@echo "\033[32mПроект успішно створено у папці src/\033[0m"
 
 
@@ -52,6 +52,24 @@ shell: ## Зайти в консоль PHP контейнера
 ## ————————————————————————————— Binaries
 artisan: ## Приклад: make artisan c='migrate'
 	@$(PHP_EXEC) php artisan $(c)
+
+cache-clear: ## Очистити всі кеші Laravel
+	@$(PHP_EXEC) php artisan optimize:clear
+
+migrate: ## Запустити міграції бази даних
+	@$(PHP_EXEC) php artisan migrate
+
+migrate-fresh: ## Drop all tables and re-run all migrations
+	@$(PHP_EXEC) php artisan migrate:fresh
+
+db-seed: ## Run all database seeders
+	@$(PHP_EXEC) php artisan db:seed
+
+db-shell: ## Зайти в консоль бази даних
+	@$(DOCKER_DEV) exec db mariadb -u $${DB_USERNAME:-laravel} -p$${DB_PASSWORD:-secret} $${DB_DATABASE:-laravel}
+
+key-generate: ## Згенерувати APP_KEY
+	@$(PHP_EXEC) php artisan key:generate
 
 composer: ## Приклад: make composer c='require fruitcake/laravel-debugbar --dev'
 	@$(PHP_EXEC) composer $(c)

@@ -9,6 +9,8 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
+      - USER_ID=${USER_ID}
+      - GROUP_ID=${GROUP_ID}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -20,6 +22,7 @@ services:
     volumes:
       - ./src:/var/www/html
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/logs:/var/log/nginx
 
   db:
     ports:

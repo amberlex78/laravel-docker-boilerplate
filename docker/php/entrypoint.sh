@@ -33,9 +33,4 @@ if [ "$APP_ENV" = "production" ] && [ -f "artisan" ]; then
     php artisan optimize
 fi
 
-# Set permissions for local dev if needed
-if [ "$APP_ENV" != "production" ] && [ -d "storage" ]; then
-    chmod -R 777 storage bootstrap/cache || true
-fi
-
 exec "$@"
