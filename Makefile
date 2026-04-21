@@ -24,7 +24,7 @@ init: ## Збірка та запуск контейнерів
 	@$(DOCKER_DEV) down --remove-orphans
 	@$(DOCKER_DEV) build --pull
 	@$(DOCKER_DEV) up --detach
-	@$(MAKE) --no-print-directory fix-permissions
+	@$(MAKE) --no-print-directory
 	@echo "\033[33mКонтейнери готові.\033[0m"
 
 fix-permissions: ## Виправити права на логи та сховище (sudo)
