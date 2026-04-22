@@ -4,6 +4,9 @@ networks:
   app-network:
     driver: bridge
 
+volumes:
+  db_data:
+
 services:
   app:
     build:

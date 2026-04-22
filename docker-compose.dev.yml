@@ -3,9 +3,10 @@ services:
     build:
       target: dev
     ports:
-      - "5173:5173" # Порт для Vite HMR
+      - "5173:5173" # Vite HMR
     volumes:
       - ./src:/var/www/html
+      - ./docker/php/conf.d/dev.ini:/usr/local/etc/php/conf.d/dev.ini
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
@@ -39,6 +40,3 @@ services:
       - "8080:8080"
     environment:
       - ADMINER_DEFAULT_SERVER=db
-
-volumes:
-  db_data:

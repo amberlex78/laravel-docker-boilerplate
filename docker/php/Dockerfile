@@ -5,12 +5,7 @@ FROM php:8.5-fpm-alpine AS base
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
-# Create a user and group with the specified IDs
-RUN apk add --no-cache shadow && \
-    usermod -u ${USER_ID} www-data && \
-    groupmod -g ${GROUP_ID} www-data
-
-# Install system dependencies
+# Install system dependencies and shadow for usermod/groupmod
 RUN apk add --no-cache \
     git \
     curl \
@@ -21,7 +16,12 @@ RUN apk add --no-cache \
     icu-dev \
     oniguruma-dev \
     linux-headers \
-    bash
+    bash \
+    shadow
+
+# Sync www-data user with host UID/GID
+RUN usermod -u ${USER_ID} www-data && \
+    groupmod -g ${GROUP_ID} www-data
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl
@@ -45,16 +45,21 @@ FROM base AS dev
 RUN apk add --no-cache nodejs npm
 
 # Install Xdebug for development
-RUN apk add --no-cache pcre-dev ${PHPIZE_DEPS} nodejs npm \
+RUN apk add --no-cache pcre-dev ${PHPIZE_DEPS} \
     && pecl install xdebug \
     && docker-php-ext-enable xdebug \
     && apk del pcre-dev ${PHPIZE_DEPS}
 
-# Install Laravel Installer globally using Composer
-RUN composer global require laravel/installer
+# Set Composer Home and install Laravel Installer as www-data
+ENV COMPOSER_HOME=/var/www/.composer
+RUN mkdir -p ${COMPOSER_HOME} && chown www-data:www-data ${COMPOSER_HOME}
 
-# Add Composer's global vendor bin to PATH
-ENV PATH="/root/.composer/vendor/bin:${PATH}"
+USER www-data
+RUN composer global require laravel/installer
+USER root
+
+# Add Composer's global vendor bin to PATH for all users
+ENV PATH="${COMPOSER_HOME}/vendor/bin:${PATH}"
 
 # Copy development php config
 COPY docker/php/conf.d/dev.ini /usr/local/etc/php/conf.d/dev.ini
@@ -89,6 +94,7 @@ RUN if [ -f composer.json ]; then \
     composer run-script post-root-package-install || true && \
     composer run-script post-create-project-cmd || true; \
     fi
+
 
 
 ##################################################################
